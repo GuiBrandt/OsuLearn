@@ -100,7 +100,6 @@ def load(filename):
         return Replay(file)
 
 def draw_cursor(ax, x, y, z):
-    # Mostra o cursor
     keys = int(z)
     if keys & 0x01:
         cursor = 'ro'
@@ -121,15 +120,18 @@ def draw_slider(ax, beatmap, radius, t, obj):
         codes.append(Path.MOVETO)
         for i in range(1, len(points)):
             codes.append(Path.LINETO)
-    elif stype == 'P':
+
+    elif stype == 'P':  # Círculo perfeito
         codes.append(Path.MOVETO)
         codes.append(Path.CURVE3)
         codes.append(Path.CURVE3)
-    else:
+
+    else: # Bezier
         n = 0
         for i in range(0, len(points)):
             n += 1
-            if i + 1 == len(points) or n == 4 or (i + 1 < len(points) and points[i] == points[i + 1]):
+            repeated = i + 1 < len(points) and points[i] == points[i + 1]
+            if i + 1 == len(points) or n == 4 or repeated:
                 if n == 2:
                     codes.append(Path.MOVETO)
                     codes.append(Path.LINETO)
@@ -145,7 +147,6 @@ def draw_slider(ax, beatmap, radius, t, obj):
                 n = 0
                 
     preempt, fade = beatmap.approach_rate()
-
     duration = beatmap.slider_duration(obj)
     if t < obj[2] + preempt + duration:
         alpha = 1
@@ -158,6 +159,7 @@ def draw_slider(ax, beatmap, radius, t, obj):
         edgecolor=(1.0, 1.0, 1.0, alpha), linewidth=radius, joinstyle='bevel', zorder=-2
     )
     ax.add_patch(slider)
+
     slider = mpatches.PathPatch(
         Path(points, codes),
         fc="none", capstyle='round', transform=ax.transData, fill=False,
