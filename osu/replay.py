@@ -217,6 +217,21 @@ def draw_hit_objects(ax, beatmap, t, objs):
             
     ax.scatter(circles[0], circles[1], color=circles[2], s=radius ** 2)
 
+def cursor_state(replay, time):
+    tt = 0
+    for t in replay:
+        w, x, y, z = t
+
+        if w > 0:
+            tt += w
+        else:
+            continue
+
+        if tt > time:
+            break
+
+    return x, y, z
+
 def preview(beatmap, replay_data):
     plt.ion()
 
@@ -231,7 +246,7 @@ def preview(beatmap, replay_data):
 
     delta = 0
     tt = 0
-    for t in replay_data:
+    for t in replay_data[0]:
         w, x, y, z = t
         
         if w > 0:
@@ -266,6 +281,11 @@ def preview(beatmap, replay_data):
             draw_hit_objects(ax, beatmap, tt, objs)
             
         draw_cursor(ax, x, y, z)
+
+        for d in replay_data[1:]:
+            x, y, z = cursor_state(d, tt)
+            draw_cursor(ax, x, y, z)
+
         fig.canvas.draw()
         
         # Calcula o atraso
