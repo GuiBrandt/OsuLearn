@@ -31,16 +31,16 @@ def create_training_data(replay_set):
 
                 time_left = obj[2] - time
 
-                is_slider = obj[3] & 2
-                is_spinner = obj[3] & 8
+                is_slider = obj[3] & 2 == 2
+                is_spinner = obj[3] & 8 == 8
 
                 if is_spinner:
                     duration = obj[5]
                 else:
                     duration = 0
             else:
-                px = 0
-                py = 0
+                px = 256
+                py = 192
                 dx = 0
                 dy = 0
                 dist = 0
@@ -51,19 +51,19 @@ def create_training_data(replay_set):
                 duration = 0
 
             r.append(np.array([
-                max(0, min(px / 512, 1)),
-                max(0, min(py / 384, 1)),
+                max(0, min(px / 512, 1)) - 0.5,
+                max(0, min(py / 384, 1)) - 0.5,
                 time_left,
-                # is_slider,
-                # is_spinner,
-                # duration
+                is_slider,
+                is_spinner,
+                #duration
             ]))
 
             time += w
 
         training_data.append(np.array(r))
 
-    return pad_sequences(np.array(training_data), dtype='float', padding='post')
+    return pad_sequences(np.array(training_data), dtype='float', padding='post', value=0)
 
 def create_target_data(replay_set):
     target_data = []
@@ -95,8 +95,8 @@ def create_target_data(replay_set):
                 angle = 0
 
             r.append(np.array([
-                max(0, min(x / 512, 1)),
-                max(0, min(y / 384, 1)),
+                max(0, min(x / 512, 1)) - 0.5,
+                max(0, min(y / 384, 1)) - 0.5,
                 # z & 0x01 == 1,
                 # z & 0x02 == 2
             ]))
@@ -109,4 +109,4 @@ def create_target_data(replay_set):
 
         target_data.append(np.array(r))
             
-    return pad_sequences(np.array(target_data), dtype='float', padding='post')
+    return pad_sequences(np.array(target_data), dtype='float', padding='post', value=0)
