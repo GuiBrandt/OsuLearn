@@ -82,7 +82,10 @@ class Beatmap:
 			section = Beatmap._read_section_header(file)
 			
 	def __getattr__(self, key):
-		return self.sections[key]
+		if key in self.sections:
+			return self.sections[key]
+		else:
+			return []
 		
 	def __getitem__(self, key):
 		for section in self.sections.values():
@@ -107,7 +110,7 @@ class Beatmap:
 		timing_point = self.timing_points[0]
 
 		for tp in self.timing_points:
-			if tp[0] > time:
+			if int(tp[0]) > time:
 				break
 			d = float(tp[1])
 			if d > 0:
@@ -126,7 +129,7 @@ class Beatmap:
 		return beat_duration * obj[7] / (100 * self["SliderMultiplier"])
 
 	# Pega os objetos visíveis na tela em dado momento
-	def visible_objects(self, time):
+	def visible_objects(self, time, count=None):
 		i = 0
 		r = []
 		
@@ -145,6 +148,8 @@ class Beatmap:
 			else:
 				break
 
+		n = 0
+
 		for obj in self.hit_objects[i:]:
 			obj_time, obj_type = obj[2], obj[3]
 
@@ -154,10 +159,15 @@ class Beatmap:
 			if obj_type & 8 and time < obj[5]:
 				r.append(obj)
 			elif obj_type & 2:
-				if time < obj_time + preempt + self.slider_duration(obj) + SLIDER_FADEOUT:
+				if time < obj_time + preempt + self.slider_duration(obj):
 					r.append(obj)
-			elif time < obj_time + preempt + CIRCLE_FADEOUT:
+			elif time < obj_time + preempt:
 				r.append(obj)
+
+			n += 1
+
+			if not count is None and n >= count:
+				return r
 			
 		return r
 

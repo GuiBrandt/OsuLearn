@@ -217,7 +217,7 @@ def draw_hit_objects(ax, beatmap, t, objs):
             
     ax.scatter(circles[0], circles[1], color=circles[2], s=radius ** 2)
 
-def preview(beatmap, replay):
+def preview(beatmap, replay_data):
     plt.ion()
 
     fig = plt.figure(facecolor='#333333')
@@ -231,7 +231,7 @@ def preview(beatmap, replay):
 
     delta = 0
     tt = 0
-    for t in replay.data:
+    for t in replay_data:
         w, x, y, z = t
         
         if w > 0:
