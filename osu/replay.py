@@ -5,6 +5,7 @@ from matplotlib.path import Path
 import matplotlib.patches as mpatches
 
 from . import beatmap as osu_beatmap
+from .util.bsearch import bsearch
 
 class Replay:
     def __init__(self, file):
@@ -56,10 +57,32 @@ class Replay:
         replay_data = lzma.decompress(file.read(replay_length)).decode('utf8')
 
         data = [t.split("|") for t in replay_data.split(',')[:-1]]
-        self.data = [(int(w), float(x), float(y), int(z)) for w, x, y, z in data]
+        data = [(int(w), float(x), float(y), int(z)) for w, x, y, z in data]
+
+        self.data = []
+        offset = 0
+        for w, x, y, z in data:
+            if w < 0:
+                continue
+            offset += w
+            self.data.append((offset, x, y, z))
 
         # Não usado
         _ = read_long(file)
+
+    def frame(self, time):
+        index = bsearch(self.data, time, lambda f: f[0])
+        
+        offset, _, _, _ = self.data[index]
+        if offset > time:
+            if index > 0:
+                return self.data[index - 1][1:]
+            else:
+                return (0, 0, 0)
+        elif index >= len(self.data):
+            index = -1
+
+        return self.data[index][1:]
 
 def read_byte(file):
     return ord(file.read(1))
@@ -204,7 +227,7 @@ def draw_hit_objects(ax, beatmap, t, objs):
             preempt, fade = beatmap.approach_rate()
 
             if t > obj[2] + preempt:
-                alpha = 1 - (t - obj[2] - preempt) / osu_beatmap.CIRCLE_FADEOUT
+                alpha = 1 - (t - obj[2] - preempt) / 100
             elif t < obj[2] + fade:
                 alpha = 1 - ((obj[2] + fade) - t) / fade
             else:

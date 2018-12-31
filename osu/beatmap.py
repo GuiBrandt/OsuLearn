@@ -1,26 +1,44 @@
-import re
 import math
-	
-CIRCLE_FADEOUT = 50
-SLIDER_FADEOUT = 100
+from datetime import time
 
-class Beatmap:
-	
-	SECTION_TYPES = {
-		'General':      'a',
-		'Editor':       'a',
-		'Metadata':     'a',
-		'Difficulty':   'a',
-		'Events':       'b',
-		'TimingPoints': 'b',
-		'Colours':      'a',
-		'HitObjects':   'b'
-	}
-	
-	def _read_section_header(file):
-		header = file.readline()
+from . import core, hitobjects, timing_points
+from .util.bsearch import bsearch
+
+import re
+
+
+_SECTION_TYPES = {
+	'General':      'a',
+	'Editor':       'a',
+	'Metadata':     'a',
+	'Difficulty':   'a',
+	'Events':       'b',
+	'TimingPoints': 'b',
+	'Colours':      'a',
+	'HitObjects':   'b'
+}
+
+class _BeatmapFile:
+	def __init__(self, file):
+		self.file = file
+		self.format_version = self.file.readline()
+
+	def read_all_sections(self):
+		sections = {}
+		section = self._read_section_header()
+		while section != None:
+			func = "_read_type_%s_section" % _SECTION_TYPES[section]
+			section_name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', section).lower()
+
+			sections[section_name] = getattr(self, func)()
+			section = self._read_section_header()
+
+		return sections
+
+	def _read_section_header(self):
+		header = self.file.readline()
 		while header != '' and re.match(r"[^\n\r\s]", header) == None:
-			header = file.readline()
+			header = self.file.readline()
 			
 		m = re.match(r"^\s*\[(\S+)\]\s*$", header)
 
@@ -28,8 +46,8 @@ class Beatmap:
 			return None
 		
 		return m[1]
-	
-	def _parse_value(v):
+
+	def _parse_value(self, v):
 		if v.isdigit():
 			return int(v)
 		elif v.replace('.', '', 1).isdigit():
@@ -38,49 +56,47 @@ class Beatmap:
 			return v
 		
 	# Seção do tipo Chave: Valor
-	def _read_type_a_section(file):
+	def _read_type_a_section(self):
 		d = dict()
 
-		line = file.readline()
+		line = self.file.readline()
 		while line != '' and re.match(r"[^\n\r\s]", line) != None:
 			m = re.match(r"^\s*(\S+)\s*:\s*(.*)\s*\r?\n$", line)
 			if m is None:
 				raise RuntimeError("Invalid file")
 			else:
-				d[m[1]] = Beatmap._parse_value(m[2])
+				d[m[1]] = self._parse_value(m[2])
 
-			line = file.readline()
+			line = self.file.readline()
 
 		return d
 
 	# Seção do tipo a,b,c,...,d
-	def _read_type_b_section(file):
+	def _read_type_b_section(self):
 		l = list()
 
-		line = file.readline()
+		line = self.file.readline()
 		while line != '' and re.match(r"[^\n\r\s]", line) != None:
-			l.append(list(map(Beatmap._parse_value, line.rstrip("\r\n").split(','))))
-			line = file.readline()
+			l.append(list(map(self._parse_value, line.rstrip("\r\n").split(','))))
+			line = self.file.readline()
 
 		return l
-	
+
+class Beatmap:	
 	def __init__(self, file):
+		file = _BeatmapFile(file)
 
-		# Versão do formato
-		self.format_version = file.readline()
+		self.format_version = file.format_version
+		self.sections = file.read_all_sections()
 
-		# Seções de informações do mapa
-		self.sections = {}
+		if 'timing_points' in self.sections:
+			self.timing_points = list(map(timing_points.create, self.sections['timing_points']))
+			del self.sections['timing_points']
 
-		section = Beatmap._read_section_header(file)
-		while section != None:
-			func = "_read_type_%s_section" % Beatmap.SECTION_TYPES[section]
-			section_name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', section).lower()
+		if 'hit_objects' in self.sections:
+			self.hit_objects = list(map(hitobjects.create, self.sections['hit_objects']))
+			del self.sections['hit_objects']
 
-			self.sections[section_name] = getattr(Beatmap, func)(file)
-
-			section = Beatmap._read_section_header(file)
-			
 	def __getattr__(self, key):
 		if key in self.sections:
 			return self.sections[key]
@@ -91,7 +107,6 @@ class Beatmap:
 		for section in self.sections.values():
 			if key in section:
 				return section[key]
-
 		return None
 	
 	def approach_rate(self):
@@ -102,66 +117,48 @@ class Beatmap:
 		else:
 			preempt = 1200 - 750 * (ar - 5) / 5
 			fade_in = 800 - 500 * (ar - 5) / 5
-
 		return preempt, fade_in
-	
-	def timing_at(self, time):
-		bpm = 0
-		timing_point = self.timing_points[0]
 
-		for tp in self.timing_points:
-			if int(tp[0]) > time:
+	def circle_radius(self):
+		return 27.2 - 2.24 * self['CircleSize']
+
+	def length(self):
+		if len(self.hit_objects) == 0:
+			return 0
+		return int(self.hit_objects[-1].time + self.hit_objects[-1].duration(self))
+
+	def timing(self, time):
+		bpm = None
+		i = bsearch(self.timing_point, time, lambda tp: tp.time)
+		timing_point = self.timing_points[i - 1]
+
+		for tp in self.timing_points[i:]:
+			if tp.offset > time:
 				break
-			d = float(tp[1])
-			if d > 0:
-				bpm = d
+			if tp.bpm > 0:
+				bpm = tp.bpm
 			timing_point = tp
 
-		return bpm, timing_point
+		while i >= 0 and bpm is None:
+			i -= 1
+			if self.timing_points[i].bpm > 0:
+				bpm = self.timing_points[i]
 
-	def slider_duration(self, obj):
-		bpm, timing_point = self.timing_at(obj[2])
-		beat_duration = float(timing_point[1])
-
-		if beat_duration < 0:
-			beat_duration = bpm * -beat_duration / 100
-
-		return beat_duration * obj[7] / (100 * self["SliderMultiplier"])
+		return bpm or 120, timing_point
 
 	# Pega os objetos visíveis na tela em dado momento
 	def visible_objects(self, time, count=None):
-		i = 0
 		r = []
+		preempt, _ = self.approach_rate()
 		
-		preempt, fade = self.approach_rate()
-		
-		# Busca binária no tempo ideal
-		beg, end = 0, len(self.hit_objects)
-		while end < beg:
-			i = (end + beg) // 2
-			obj_time = self.hit_objects[i][2]
-
-			if obj_time > time:
-				end = i
-			elif obj_time < time:
-				beg = i
-			else:
-				break
-
+		i = bsearch(self.hit_objects, time, lambda obj: obj.time - preempt + obj.duration(self))
 		n = 0
 
 		for obj in self.hit_objects[i:]:
-			obj_time, obj_type = obj[2], obj[3]
-
-			if time < obj_time:
+			if time < obj.time - preempt:
 				break
 				
-			if obj_type & 8 and time < obj[5]:
-				r.append(obj)
-			elif obj_type & 2:
-				if time < obj_time + preempt + self.slider_duration(obj):
-					r.append(obj)
-			elif time < obj_time + preempt:
+			if time < obj.time + obj.duration(self):
 				r.append(obj)
 
 			n += 1
