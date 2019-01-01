@@ -67,18 +67,6 @@ def create_target_data(replay_set):
             x = max(0, min(x / 512, 1))
             y = max(0, min(y / 384, 1))
 
-            visible_objects = beatmap.visible_objects(time, count=1)
-
-            if len(visible_objects) > 0:
-                obj = visible_objects[0]
-                time_left = obj.time - time
-            else:
-                time_left = float("inf")
-
-            if time_left > SAMPLE_RATE:
-                x = 0.5
-                y = 0.5
-
             r.append(np.array([
                 x  - 0.5,
                 y  - 0.5
