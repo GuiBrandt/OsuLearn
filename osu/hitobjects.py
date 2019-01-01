@@ -102,7 +102,7 @@ class Slider(HitCircle):
 		if beat_duration < 0:
 			beat_duration = bpm * -beat_duration / 100
 
-		return beat_duration * self.pixel_length / (100 * beatmap["SliderMultiplier"])
+		return beat_duration * self.pixel_length / (100 * beatmap["SliderMultiplier"]) * self.repeat
 
 	def render(self, beatmap, screen: pygame.Surface, time: int):
 
@@ -121,9 +121,14 @@ class Slider(HitCircle):
 		if elapsed <= 0:
 			return self.x, self.y
 
-		duration = self.duration(beatmap)
 
-		p = [(self.x, self.y)] + self.curve_points
+		p = []
+		for i in range(1, self.repeat + 1):
+			l = ([(self.x, self.y)] + self.curve_points)
+			if i % 2 == 0:
+				l = list(reversed(l))
+			p += l
+
 		points = []
 		for i in range(len(p) - 1):
 			x, y = p[i]
@@ -135,8 +140,9 @@ class Slider(HitCircle):
 			points.append([dist, theta, x, y])
 		points.append([0, 0, *p[-1]])
 
+		duration = self.duration(beatmap)
 		while elapsed > 0:
-			points[0][0] -= self.pixel_length / duration
+			points[0][0] -= self.pixel_length / duration * self.repeat
 			if points[0][0] <= 0:
 				if len(points) > 2:
 					points.pop(0)

@@ -65,14 +65,12 @@ while True:
             cx = ox
             cy = oy
 
-    #x, y, z = my_replay.frame(time)
+    #cx, cy, z = my_replay.frame(time)
     pygame.draw.circle(screen, (0, 0, 255), (int(cx), int(cy)), 4)
 
     frame = (time - int(beatmap.hit_objects[0].time - preempt)) // REPLAY_SAMPLING_RATE
     if frame > 0 and frame < len(ia_replay):
         x, y = ia_replay[frame]
-        x = x / 2 + 0.5
-        y = y / 2 + 0.5
         x *= SCREEN_WIDTH
         y *= SCREEN_HEIGHT
         pygame.draw.circle(screen, (0, 255, 0), (int(x), int(y)), 8)
