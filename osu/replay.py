@@ -62,10 +62,10 @@ class Replay:
         self.data = []
         offset = 0
         for w, x, y, z in data:
-            if w < 0:
-                continue
             offset += w
             self.data.append((offset, x, y, z))
+            
+        self.data = list(sorted(self.data))
 
         # Não usado
         _ = read_long(file)

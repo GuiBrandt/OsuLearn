@@ -61,12 +61,11 @@ class HitCircle(HitObject):
 		return 0
 
 	def render(self, beatmap, screen: pygame.Surface, time: int):
-		pos = (self.x, core.SCREEN_HEIGHT - self.y)
+		pos = (self.x, self.y)
 		color = beatmap.combo_color(self.new_combo, self.combo_skip)
 		radius = beatmap.circle_radius()
 
-		pygame.draw.circle(screen, color, pos, radius)
-		pygame.draw.circle(screen, (255, 255, 255), pos, radius, radius / 10)
+		pygame.draw.circle(screen, color, pos, int(radius))
 
 class SliderType(Enum):
 	LINEAR  = "L"
@@ -82,7 +81,7 @@ class Slider(HitCircle):
 		self.slider_type = SliderType(slider_info.pop(0))
 
 		coordinates = [t.split(':') for t in slider_info]
-		self.curve_points = [(int(x), core.SCREEN_HEIGHT - int(y)) for x, y in coordinates]
+		self.curve_points = [(int(x), int(y)) for x, y in coordinates]
 
 		self.repeat = int(args[6])
 		self.pixel_length = int(args[7])
@@ -101,7 +100,15 @@ class Slider(HitCircle):
 		return beat_duration * self.pixel_length / (100 * beatmap["SliderMultiplier"])
 
 	def render(self, beatmap, screen: pygame.Surface, time: int):
+
+		vertices = [(self.x, self.y)] + self.curve_points
+		pygame.draw.lines(screen, (255, 255, 255), False, vertices)
+
 		super().render(beatmap, screen, time)
+		
+		end_pos = self.curve_points[-1]
+		radius = beatmap.circle_radius()
+		pygame.draw.circle(screen, (255, 255, 255), end_pos, int(radius), 1)
 
 class Spinner(HitObject):
 	RADIUS = 256
@@ -114,7 +121,7 @@ class Spinner(HitObject):
 		return self.end_time - self.time
 
 	def render(self, beatmap, screen: pygame.Surface, time: int):
-		pos = (self.x, core.SCREEN_HEIGHT - self.y)
+		pos = (self.x, self.y)
 		pygame.draw.circle(screen, (255, 255, 255), pos, Spinner.RADIUS, 2)
 
 def create(obj):

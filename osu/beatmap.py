@@ -97,6 +97,9 @@ class Beatmap:
 			self.hit_objects = list(map(hitobjects.create, self.sections['hit_objects']))
 			del self.sections['hit_objects']
 
+	def combo_color(self, new_combo, combo_skip):
+		return (255, 0, 0)
+
 	def __getattr__(self, key):
 		if key in self.sections:
 			return self.sections[key]
@@ -150,11 +153,17 @@ class Beatmap:
 	def visible_objects(self, time, count=None):
 		r = []
 		preempt, _ = self.approach_rate()
+
+		i = bsearch(self.hit_objects, time, lambda obj: obj.time - preempt)
+		i -= 10
+		i = max([0, i])
 		
-		i = bsearch(self.hit_objects, time, lambda obj: obj.time - preempt + obj.duration(self))
 		n = 0
 
 		for obj in self.hit_objects[i:]:
+			if time > obj.time + obj.duration(self):
+				continue
+
 			if time < obj.time - preempt:
 				break
 				

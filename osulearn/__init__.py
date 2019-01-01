@@ -5,13 +5,17 @@ import osu
 
 from keras.preprocessing.sequence import pad_sequences
 
+SAMPLE_RATE = 16
+LENGTH = 250
+
 def create_training_data(replay_set):
     training_data = []
 
     for beatmap, _ in replay_set:
         r = []
+        preempt, _ = beatmap.approach_rate()
 
-        for time in range(0, beatmap.length(), 12):
+        for time in range(0, beatmap.length(), SAMPLE_RATE):
             visible_objects = beatmap.visible_objects(time, count=1)
 
             if len(visible_objects) > 0:
@@ -24,26 +28,26 @@ def create_training_data(replay_set):
             else:
                 px = osu.core.SCREEN_WIDTH / 2
                 py = osu.core.SCREEN_HEIGHT / 2
-                time_left = 1
+                time_left = float("inf")
                 is_slider = 0
                 is_spinner = 0
 
             r.append(np.array([
                 (max(0, min(px / osu.core.SCREEN_WIDTH, 1)) - 0.5),
                 (max(0, min(py / osu.core.SCREEN_HEIGHT, 1)) - 0.5),
-                time_left / 1000,
+                time_left < preempt,
                 is_slider,
                 is_spinner
             ]))
             
-            if len(r) == 2000:
+            if len(r) == LENGTH:
                 training_data.append(r)
                 r = []
                 
         if len(r) > 0:
-            training_data.append(r)
+            training_data.append(r)        
 
-        print(beatmap["Title"])            
+        print(beatmap['Title'])
 
     return pad_sequences(np.array(training_data), dtype='float', padding='post', value=0)
 
@@ -53,7 +57,7 @@ def create_target_data(replay_set):
     for beatmap, replay in replay_set:
         r = []
 
-        for time in range(0, beatmap.length(), 12):
+        for time in range(0, beatmap.length(), SAMPLE_RATE):
             x, y, _ = replay.frame(time)
 
             r.append(np.array([
@@ -61,7 +65,7 @@ def create_target_data(replay_set):
                 max(0, min(y / 384, 1)) - 0.5
             ]))
 
-            if len(r) == 2000:
+            if len(r) == LENGTH:
                 target_data.append(r)
                 r = []
 
