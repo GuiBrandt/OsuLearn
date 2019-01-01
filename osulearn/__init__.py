@@ -6,16 +6,18 @@ import osu
 from keras.preprocessing.sequence import pad_sequences
 
 SAMPLE_RATE = 16
-LENGTH = 250
+LENGTH = 1024
 
 def create_training_data(replay_set):
     training_data = []
 
     for beatmap, _ in replay_set:
+        if len(beatmap.hit_objects) == 0:
+            continue
         r = []
         preempt, _ = beatmap.approach_rate()
 
-        for time in range(0, beatmap.length(), SAMPLE_RATE):
+        for time in range(int(beatmap.hit_objects[0].time - preempt), beatmap.length(), SAMPLE_RATE):
             visible_objects = beatmap.visible_objects(time, count=1)
 
             if len(visible_objects) > 0:
@@ -55,14 +57,31 @@ def create_target_data(replay_set):
     target_data = []
     
     for beatmap, replay in replay_set:
+        if len(beatmap.hit_objects) == 0:
+            continue
         r = []
+        preempt, _ = beatmap.approach_rate()
 
-        for time in range(0, beatmap.length(), SAMPLE_RATE):
+        for time in range(int(beatmap.hit_objects[0].time - preempt), beatmap.length(), SAMPLE_RATE):
             x, y, _ = replay.frame(time)
+            x = max(0, min(x / 512, 1))
+            y = max(0, min(y / 384, 1))
+
+            visible_objects = beatmap.visible_objects(time, count=1)
+
+            if len(visible_objects) > 0:
+                obj = visible_objects[0]
+                time_left = obj.time - time
+            else:
+                time_left = float("inf")
+
+            if time_left > SAMPLE_RATE:
+                x = 0.5
+                y = 0.5
 
             r.append(np.array([
-                max(0, min(x / 512, 1)) - 0.5,
-                max(0, min(y / 384, 1)) - 0.5
+                x  - 0.5,
+                y  - 0.5
             ]))
 
             if len(r) == LENGTH:

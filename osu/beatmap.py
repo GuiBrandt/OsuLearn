@@ -82,7 +82,7 @@ class _BeatmapFile:
 
 		return l
 
-class Beatmap:	
+class Beatmap:
 	def __init__(self, file):
 		file = _BeatmapFile(file)
 

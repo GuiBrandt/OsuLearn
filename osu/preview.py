@@ -11,7 +11,8 @@ from .core import SCREEN_WIDTH, SCREEN_HEIGHT
 pygame.init()
 
 BEATMAPS_FOLDER = 'C:\\Program Files (x86)\\Jogos\\osu!\\Songs\\'
-BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Kami no Kotoba (byfar) [[]Voice of God[]]*.osu")[0]
+BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Daybreak*Horizon[]]*.osu")[0]
+#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Kami no Kotoba (byfar) [[]Voice of God[]]*.osu")[0]
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Imprinting*9.5*.osu")[0]
 beatmap = _beatmap.load(BEATMAP)
 
@@ -34,6 +35,8 @@ pygame.mixer.music.play()
 
 cx = 0
 cy = 0
+
+preempt, _ = beatmap.approach_rate()
 
 while True:
     time = pygame.mixer.music.get_pos()
@@ -58,12 +61,14 @@ while True:
     #x, y, z = my_replay.frame(time)
     pygame.draw.circle(screen, (0, 0, 255), (int(cx), int(cy)), 4)
 
-    x, y = ia_replay[time // REPLAY_SAMPLING_RATE]
-    x *= SCREEN_WIDTH
-    x += SCREEN_WIDTH / 2
-    y *= SCREEN_HEIGHT
-    y += SCREEN_HEIGHT / 2
-    pygame.draw.circle(screen, (0, 255, 0), (int(x), int(y)), 8)
+    frame = (time - int(beatmap.hit_objects[0].time - preempt)) // REPLAY_SAMPLING_RATE
+    if frame > 0 and frame < len(ia_replay):
+        x, y = ia_replay[frame]
+        x *= SCREEN_WIDTH
+        x += SCREEN_WIDTH / 2
+        y *= SCREEN_HEIGHT
+        y += SCREEN_HEIGHT / 2
+        pygame.draw.circle(screen, (0, 255, 0), (int(x), int(y)), 8)
 
     pygame.display.flip()
 
