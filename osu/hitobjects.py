@@ -1,5 +1,7 @@
 import pygame
 
+import math
+
 from . import core
 
 from .util import bezier
@@ -52,6 +54,9 @@ class HitObject(ABC):
 	@abstractmethod
 	def render(self, beatmap, screen: pygame.Surface, time: int):
 		pass
+
+	def target_position(self, beatmap, time: int):
+			return self.x, self.y
 
 class HitCircle(HitObject):
 	def __init__(self, *args):
@@ -106,12 +111,49 @@ class Slider(HitCircle):
 
 		super().render(beatmap, screen, time)
 		
-		end_pos = self.curve_points[-1]
+		pos = self.target_position(beatmap, time)
 		radius = beatmap.circle_radius()
-		pygame.draw.circle(screen, (255, 255, 255), end_pos, int(radius), 1)
+		pygame.draw.circle(screen, (255, 255, 255), list(map(int, pos)), int(radius), 1)
+
+	def current_curve_point(self, beatmap, time: int):
+		elapsed = time - self.time
+
+		if elapsed <= 0:
+			return self.x, self.y
+
+		duration = self.duration(beatmap)
+
+		p = [(self.x, self.y)] + self.curve_points
+		points = []
+		for i in range(len(p) - 1):
+			x, y = p[i]
+			lx, ly = p[i + 1]
+			dx = lx - x
+			dy = ly - y
+			dist = math.hypot(dx, dy)
+			theta = math.atan2(dy, dx)
+			points.append([dist, theta, x, y])
+		points.append([0, 0, *p[-1]])
+
+		while elapsed > 0:
+			points[0][0] -= self.pixel_length / duration
+			if points[0][0] <= 0:
+				if len(points) > 2:
+					points.pop(0)
+				else:
+					break
+			elapsed -= 1
+
+		x = points[1][2] - math.cos(points[0][1]) * points[0][0]
+		y = points[1][3] - math.sin(points[0][1]) * points[0][0]
+
+		return x, y
+
+	def target_position(self, beatmap, time: int):
+		return self.current_curve_point(beatmap, time)
 
 class Spinner(HitObject):
-	RADIUS = 256
+	RADIUS = 128
 
 	def __init__(self, *args):
 		super().__init__(*args)

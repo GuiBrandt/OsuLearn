@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import random
 
 import osu
 
@@ -22,21 +23,24 @@ def create_training_data(replay_set):
 
             if len(visible_objects) > 0:
                 obj = visible_objects[0]
-                px, py = obj.x, obj.y
+                px, py = obj.target_position(beatmap, time)
                 time_left = obj.time - time
                 is_slider = obj is osu.hitobjects.Slider
                 is_spinner = obj is osu.hitobjects.Spinner
                 
             else:
-                px = osu.core.SCREEN_WIDTH / 2
-                py = osu.core.SCREEN_HEIGHT / 2
+                px = random.randint(0, osu.core.SCREEN_WIDTH)
+                py = random.randint(0, osu.core.SCREEN_HEIGHT)
                 time_left = float("inf")
                 is_slider = 0
                 is_spinner = 0
 
+            px = (max(0, min(px / osu.core.SCREEN_WIDTH, 1))  - 0.5) * 2
+            py = (max(0, min(py / osu.core.SCREEN_HEIGHT, 1))  - 0.5) * 2
+
             r.append(np.array([
-                (max(0, min(px / osu.core.SCREEN_WIDTH, 1)) - 0.5),
-                (max(0, min(py / osu.core.SCREEN_HEIGHT, 1)) - 0.5),
+                px,
+                py,
                 time_left < preempt,
                 is_slider,
                 is_spinner
@@ -64,12 +68,13 @@ def create_target_data(replay_set):
 
         for time in range(int(beatmap.hit_objects[0].time - preempt), beatmap.length(), SAMPLE_RATE):
             x, y, _ = replay.frame(time)
-            x = max(0, min(x / 512, 1))
-            y = max(0, min(y / 384, 1))
+
+            x = (max(0, min(x / osu.core.SCREEN_WIDTH, 1))  - 0.5) * 2
+            y = (max(0, min(y / osu.core.SCREEN_HEIGHT, 1))  - 0.5) * 2
 
             r.append(np.array([
-                x  - 0.5,
-                y  - 0.5
+                x,
+                y
             ]))
 
             if len(r) == LENGTH:
