@@ -13,9 +13,9 @@ from .core import SCREEN_WIDTH, SCREEN_HEIGHT
 pygame.init()
 
 BEATMAPS_FOLDER = 'C:\\Program Files (x86)\\Jogos\\osu!\\Songs\\'
-#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Uta*Himei*.osu")[0]
+BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Uta*Himei*.osu")[0]
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Burnt Rice*ScubDomino*Lemon*.osu")[0]
-BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*My Love*Insane*.osu")[0]
+#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Kami no Kotoba*byfar*Voice of God*.osu")[0]
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Imprinting*9.5*.osu")[0]
 beatmap = _beatmap.load(BEATMAP)
 

@@ -82,8 +82,16 @@ def create_target_data(replay_set):
         preempt, _ = beatmap.approach_rate()
 
         for time in range(int(beatmap.hit_objects[0].time - preempt), beatmap.length(), SAMPLE_RATE):
-            #visible_objects = beatmap.visible_objects(time, count=1)
-            x, y, _ = replay.frame(time)
+            visible_objects = beatmap.visible_objects(time, count=1)
+            
+            if len(visible_objects) > 0:
+                obj = visible_objects[0]
+                if isinstance(obj, hitobjects.Spinner):
+                    x, y = obj.x, obj.y
+                else:
+                    x, y, _ = replay.frame(time)
+            else:
+                x, y = osu.core.SCREEN_WIDTH / 2, osu.core.SCREEN_HEIGHT / 2
 
             x = max(0, min(x / osu.core.SCREEN_WIDTH, 1))
             y = max(0, min(y / osu.core.SCREEN_HEIGHT, 1))
