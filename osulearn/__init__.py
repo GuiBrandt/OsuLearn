@@ -1,20 +1,30 @@
-import numpy as np
 import math
-import random
+
+import numpy as np
+from keras.preprocessing.sequence import pad_sequences
 
 import osu
+import random
+from osu import hitobjects
 
-from keras.preprocessing.sequence import pad_sequences
 
 SAMPLE_RATE = 16
 LENGTH = 1024
 
 def create_training_data(replay_set):
     training_data = []
+    _cache = {}
 
     for beatmap, _ in replay_set:
+        if beatmap in _cache:
+            training_data += _cache[beatmap]
+            continue
+
         if len(beatmap.hit_objects) == 0:
             continue
+
+        _cache[beatmap] = []
+
         r = []
         preempt, _ = beatmap.approach_rate()
 
@@ -24,18 +34,15 @@ def create_training_data(replay_set):
 
             if len(visible_objects) > 0:
                 obj = visible_objects[0]
-                last_visible_object = obj
                 px, py = obj.target_position(beatmap, time)
                 time_left = obj.time - time
-                is_slider = obj is osu.hitobjects.Slider
-                is_spinner = obj is osu.hitobjects.Spinner
-                
+                is_slider = int(isinstance(obj, osu.hitobjects.Slider))
+                is_spinner = int(isinstance(obj, osu.hitobjects.Spinner))
+
+                last_visible_object = obj
+
             else:
-                if last_visible_object is None:
-                    px = osu.core.SCREEN_WIDTH / 2
-                    py = osu.core.SCREEN_HEIGHT / 2
-                else:
-                    px, py = last_visible_object.target_position(beatmap, time)
+                px, py = osu.core.SCREEN_WIDTH / 2, osu.core.SCREEN_HEIGHT / 2
 
                 time_left = float("inf")
                 is_slider = 0
@@ -45,8 +52,8 @@ def create_training_data(replay_set):
             py = max(0, min(py / osu.core.SCREEN_HEIGHT, 1))
 
             r.append(np.array([
-                px,
-                py,
+                px - 0.5,
+                py - 0.5,
                 time_left < preempt,
                 is_slider,
                 is_spinner
@@ -54,9 +61,11 @@ def create_training_data(replay_set):
             
             if len(r) == LENGTH:
                 training_data.append(r)
+                _cache[beatmap].append(r)
                 r = []
                 
         if len(r) > 0:
+            _cache[beatmap].append(r)
             training_data.append(r)        
 
         print(beatmap['Title'])
@@ -73,14 +82,15 @@ def create_target_data(replay_set):
         preempt, _ = beatmap.approach_rate()
 
         for time in range(int(beatmap.hit_objects[0].time - preempt), beatmap.length(), SAMPLE_RATE):
+            #visible_objects = beatmap.visible_objects(time, count=1)
             x, y, _ = replay.frame(time)
 
             x = max(0, min(x / osu.core.SCREEN_WIDTH, 1))
             y = max(0, min(y / osu.core.SCREEN_HEIGHT, 1))
 
             r.append(np.array([
-                x,
-                y
+                x - 0.5,
+                y - 0.5
             ]))
 
             if len(r) == LENGTH:

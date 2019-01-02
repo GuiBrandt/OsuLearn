@@ -118,9 +118,11 @@ class Slider(HitCircle):
 	def current_curve_point(self, beatmap, time: int):
 		elapsed = time - self.time
 
-		if elapsed <= 0:
+		if elapsed <= 0 or len(self.curve_points) == 0:
 			return self.x, self.y
-
+		
+		if elapsed >= self.duration(beatmap):
+			return self.curve_points[-1]
 
 		p = []
 		for i in range(1, self.repeat + 1):
@@ -149,6 +151,9 @@ class Slider(HitCircle):
 				else:
 					break
 			elapsed -= 1
+
+		if len(points) < 2:
+			return self.curve_points[-1]
 
 		x = points[1][2] - math.cos(points[0][1]) * points[0][0]
 		y = points[1][3] - math.sin(points[0][1]) * points[0][0]

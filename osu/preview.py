@@ -14,7 +14,8 @@ pygame.init()
 
 BEATMAPS_FOLDER = 'C:\\Program Files (x86)\\Jogos\\osu!\\Songs\\'
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Uta*Himei*.osu")[0]
-BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Kami no Kotoba (byfar) [[]Voice of God[]]*.osu")[0]
+#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Burnt Rice*ScubDomino*Lemon*.osu")[0]
+BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*My Love*Insane*.osu")[0]
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Imprinting*9.5*.osu")[0]
 beatmap = _beatmap.load(BEATMAP)
 
@@ -71,6 +72,8 @@ while True:
     frame = (time - int(beatmap.hit_objects[0].time - preempt)) // REPLAY_SAMPLING_RATE
     if frame > 0 and frame < len(ia_replay):
         x, y = ia_replay[frame]
+        x += 0.5
+        y += 0.5
         x *= SCREEN_WIDTH
         y *= SCREEN_HEIGHT
         pygame.draw.circle(screen, (0, 255, 0), (int(x), int(y)), 8)

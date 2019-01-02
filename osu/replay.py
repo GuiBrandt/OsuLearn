@@ -13,7 +13,7 @@ class Replay:
 
         # Sem minigames
         if self.game_mode != 0:
-            return None
+            raise RuntimeError("Not a osu!std replay")
 
         # Versão do osu! e hash do mapa. A gente ignora.
         self.osu_version = read_int(file)
