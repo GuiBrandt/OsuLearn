@@ -2,10 +2,9 @@ import math
 from datetime import time
 
 from . import core, hitobjects, timing_points
-from .util.bsearch import bsearch
+from ._util.bsearch import bsearch
 
 import re
-
 
 _SECTION_TYPES = {
 	'General':      'a',
@@ -125,12 +124,18 @@ class Beatmap:
 	def circle_radius(self):
 		return 27.2 - 2.24 * self['CircleSize']
 
+	def start_offset(self):
+		preempt, _ = self.approach_rate()
+		return int(self.hit_objects[0].time - preempt)
+
 	def length(self):
 		if len(self.hit_objects) == 0:
 			return 0
-		return int(self.hit_objects[-1].time + self.hit_objects[-1].duration(self))
+		last_obj = self.hit_objects[-1]
+		beat_duration = self.beat_duration(last_obj.time)
+		return int(last_obj.time + last_obj.duration(beat_duration, self['SliderMultiplier']))
 
-	def timing(self, time):
+	def _timing(self, time):
 		bpm = None
 		i = bsearch(self.timing_point, time, lambda tp: tp.time)
 		timing_point = self.timing_points[i - 1]
@@ -145,37 +150,44 @@ class Beatmap:
 		while i >= 0 and bpm is None:
 			i -= 1
 			if self.timing_points[i].bpm > 0:
-				bpm = self.timing_points[i]
+				bpm = self.timing_points[i].bpm
 
 		return bpm or 120, timing_point
 
+	def beat_duration(self, time):
+		bpm, timing_point = self._timing(time)
+		beat_duration = timing_point.bpm
+		if beat_duration < 0:
+			return bpm * -beat_duration / 100
+		return beat_duration
+
 	# Pega os objetos visíveis na tela em dado momento
 	def visible_objects(self, time, count=None):
-		r = []
+		objects = []
 		preempt, _ = self.approach_rate()
 
-		i = bsearch(self.hit_objects, time, lambda obj: obj.time - preempt)
-		i -= 10
-		i = max([0, i])
+		i = bsearch(self.hit_objects, time, lambda obj: obj.time + preempt - obj.duration(self.beat_duration(obj.time), self['SliderMultiplier']))
+		i -= 1
+		if i < 0:
+			i = 0
 		
 		n = 0
 
 		for obj in self.hit_objects[i:]:
-			if time > obj.time + obj.duration(self):
-				continue
+			obj_duration = obj.duration(self.beat_duration(obj.time), self['SliderMultiplier'])
 
-			if time < obj.time - preempt:
+			if time > obj.time + obj_duration:
+				continue
+			elif time < obj.time - preempt:
 				break
-				
-			if time < obj.time + obj.duration(self):
-				r.append(obj)
+			elif time < obj.time + obj_duration:
+				objects.append(obj)
 
 			n += 1
-
 			if not count is None and n >= count:
-				return r
+				return objects
 			
-		return r
+		return objects
 
 def load(filename):
 	with open(filename, 'r', encoding='utf8') as file:

@@ -5,7 +5,7 @@ from matplotlib.path import Path
 import matplotlib.patches as mpatches
 
 from . import beatmap as osu_beatmap
-from .util.bsearch import bsearch
+from ._util.bsearch import bsearch
 
 class Replay:
     def __init__(self, file):

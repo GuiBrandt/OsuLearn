@@ -3,10 +3,10 @@ import math
 import numpy as np
 from keras.preprocessing.sequence import pad_sequences
 
-import osu
+import osu.rulesets
 import random
-from osu import hitobjects
 
+from osu.rulesets import hitobjects
 
 SAMPLE_RATE = 16
 LENGTH = 1024
@@ -28,28 +28,27 @@ def create_training_data(replay_set):
         r = []
         preempt, _ = beatmap.approach_rate()
 
-        last_visible_object = None
-        for time in range(int(beatmap.hit_objects[0].time - preempt), beatmap.length(), SAMPLE_RATE):
+        for time in range(beatmap.start_offset(), beatmap.length(), SAMPLE_RATE):
             visible_objects = beatmap.visible_objects(time, count=1)
 
             if len(visible_objects) > 0:
                 obj = visible_objects[0]
-                px, py = obj.target_position(beatmap, time)
-                time_left = obj.time - time
-                is_slider = int(isinstance(obj, osu.hitobjects.Slider))
-                is_spinner = int(isinstance(obj, osu.hitobjects.Spinner))
+                beat_duration = beatmap.beat_duration(obj.time)
+                px, py = obj.target_position(time, beat_duration, beatmap['SliderMultiplier'])
 
-                last_visible_object = obj
+                time_left = obj.time - time
+                is_slider = int(isinstance(obj, hitobjects.Slider))
+                is_spinner = int(isinstance(obj, hitobjects.Spinner))
 
             else:
-                px, py = osu.core.SCREEN_WIDTH / 2, osu.core.SCREEN_HEIGHT / 2
+                px, py = osu.rulesets.core.SCREEN_WIDTH / 2, osu.rulesets.core.SCREEN_HEIGHT / 2
 
                 time_left = float("inf")
                 is_slider = 0
                 is_spinner = 0
 
-            px = max(0, min(px / osu.core.SCREEN_WIDTH, 1))
-            py = max(0, min(py / osu.core.SCREEN_HEIGHT, 1))
+            px = max(0, min(px / osu.rulesets.core.SCREEN_WIDTH, 1))
+            py = max(0, min(py / osu.rulesets.core.SCREEN_HEIGHT, 1))
 
             r.append(np.array([
                 px - 0.5,
@@ -79,9 +78,8 @@ def create_target_data(replay_set):
         if len(beatmap.hit_objects) == 0:
             continue
         r = []
-        preempt, _ = beatmap.approach_rate()
 
-        for time in range(int(beatmap.hit_objects[0].time - preempt), beatmap.length(), SAMPLE_RATE):
+        for time in range(beatmap.start_offset(), beatmap.length(), SAMPLE_RATE):
             visible_objects = beatmap.visible_objects(time, count=1)
             
             if len(visible_objects) > 0:
@@ -91,10 +89,10 @@ def create_target_data(replay_set):
                 else:
                     x, y, _ = replay.frame(time)
             else:
-                x, y = osu.core.SCREEN_WIDTH / 2, osu.core.SCREEN_HEIGHT / 2
+                x, y = osu.rulesets.core.SCREEN_WIDTH / 2, osu.rulesets.core.SCREEN_HEIGHT / 2
 
-            x = max(0, min(x / osu.core.SCREEN_WIDTH, 1))
-            y = max(0, min(y / osu.core.SCREEN_HEIGHT, 1))
+            x = max(0, min(x / osu.rulesets.core.SCREEN_WIDTH, 1))
+            y = max(0, min(y / osu.rulesets.core.SCREEN_HEIGHT, 1))
 
             r.append(np.array([
                 x - 0.5,
