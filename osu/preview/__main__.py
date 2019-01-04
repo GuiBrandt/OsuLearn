@@ -15,16 +15,17 @@ pygame.init()
 BEATMAPS_FOLDER = 'C:\\Program Files (x86)\\Jogos\\osu!\\Songs\\'
 BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Uta*Himei*.osu")[0]
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Burnt Rice*ScubDomino*Lemon*.osu")[0]
-#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Kami no Kotoba*byfar*Voice of God*.osu")[0]
+#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Quantum Entanglement*.osu")[0]
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Imprinting*9.5*.osu")[0]
 #BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*DAYBREAK*Horizon[]]*.osu")[0]
 beatmap = _beatmap.load(BEATMAP)
 
 AUDIO = os.path.dirname(BEATMAP) + "\\" + beatmap["AudioFilename"]
 
+#REPLAY = glob('C:\\Program Files (x86)\\Jogos\\osu!\\Replays\\BzMasked -*Quantum Entanglement*.osr')[0]
 REPLAY = 'C:\\Program Files (x86)\\Jogos\\osu!\\Replays\\BzMasked - Imperial Circus Dead Decadence - Uta [Himei] (2018-04-29) Osu.osr'
 REPLAY_DATA = 'osu\\replay.npy'
-REPLAY_SAMPLING_RATE = 16
+REPLAY_SAMPLING_RATE = 32
 
 my_replay = _replay.load(REPLAY)
 

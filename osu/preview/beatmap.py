@@ -2,9 +2,11 @@ from ..rulesets.beatmap import Beatmap as BeatmapRuleset
 from . import hitobjects
 
 COLOR_PALLETE = [
-    ( 255,   0,   0 ),
+    #( 255,   0,   0 ),
+    ( 255, 0,   255 ),
     ( 255, 255,   0 ),
-    (   0, 255,   0 ),
+    #(   0, 255,   0 ),
+    (   0, 255, 255 ),
     (   0,   0, 255 ),
 ]
 
@@ -28,14 +30,15 @@ class Beatmap:
             self.last_new_combo = visible_objects[0].time
 
         color_index = self.color_index
+
         circle_radius = int(self.beatmap.circle_radius())
         beat_duration = self.beatmap.beat_duration(time)
 
         for i in range(len(visible_objects)):
             obj = visible_objects[i]
 
-            if i > 0 and obj.new_combo:
-                color_index += visible_objects[0].combo_skip + 1
+            if obj.new_combo and obj.time > self.last_new_combo:
+                color_index += obj.combo_skip + 1
                 color_index %= len(COLOR_PALLETE)
 
             hitobjects.render(

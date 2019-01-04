@@ -167,7 +167,7 @@ class Beatmap:
 		preempt, _ = self.approach_rate()
 
 		i = bsearch(self.hit_objects, time, lambda obj: obj.time + preempt - obj.duration(self.beat_duration(obj.time), self['SliderMultiplier']))
-		i -= 1
+		i -= 5
 		if i < 0:
 			i = 0
 		
