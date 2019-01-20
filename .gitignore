@@ -1,6 +1,5 @@
-
-# Created by https://www.gitignore.io/api/python,jupyternotebook
-# Edit at https://www.gitignore.io/?templates=python,jupyternotebook
+# Created by https://www.gitignore.io/api/python,jupyternotebook,visualstudiocode
+# Edit at https://www.gitignore.io/?templates=python,jupyternotebook,visualstudiocode
 
 ### JupyterNotebook ###
 .ipynb_checkpoints
@@ -129,7 +128,18 @@ dmypy.json
 ### Python Patch ###
 .venv/
 
-# End of https://www.gitignore.io/api/python,jupyternotebook
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+
+# End of https://www.gitignore.io/api/python,jupyternotebook,visualstudiocode
 
 *.hdf5
 *.npy

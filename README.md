@@ -28,6 +28,6 @@ It has figured out how to aim without looking like a robot and can even hit some
 Future
 ------
 
-The next step to be taken is tranforming this into a GAN, so it can generate multiple different replays for a given map, mimicking a human play style.
+The next step is to transform this into a GAN, so it can generate multiple different replays for a given map, mimicking a human play style.
 
 This might take some time though, so that's it for now x).
