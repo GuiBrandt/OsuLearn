@@ -16,7 +16,7 @@ from ._cli import _print_progress_bar
 
 # Constants
 BATCH_LENGTH    = 2048
-FRAME_RATE      = 32
+FRAME_RATE      = 24
 
 # Feature index
 INPUT_FEATURES  = ['x', 'y', 'visible', 'is_slider', 'is_spinner']

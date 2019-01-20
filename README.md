@@ -19,7 +19,7 @@ Results
 
 This is a preview for a replay generated for a map the AI had never seen before:
 
-![IA Generated Replay](https://media.giphy.com/media/1wn8SVlutuiIxJ88Oi/giphy.gif)
+![IA Generated Replay](https://media.giphy.com/media/cYDD6KQP0dqK1XcXpu/giphy.gif)
 
 Pretty good, actually!
 

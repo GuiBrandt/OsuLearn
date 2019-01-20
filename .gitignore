@@ -143,5 +143,6 @@ dmypy.json
 
 *.hdf5
 *.npy
-.vscode/*
-.data/*
+.vscode/
+.data/
+.generated/

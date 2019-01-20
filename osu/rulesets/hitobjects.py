@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from enum import Enum, IntEnum, IntFlag
 
 from . import core
-#from ._util import bezier
+from ._util import bezier
 
 class HitObjectType(IntFlag):
 	CIRCLE          = 0b00000001
