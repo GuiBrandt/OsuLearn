@@ -3,40 +3,36 @@ import os
 
 import numpy as np
 import pygame
+import mutagen.mp3
+
 from ..rulesets import beatmap as _beatmap, hitobjects as _hitobjects, \
-    replay as _replay
+                        replay as _replay
 from ..rulesets.core import SCREEN_HEIGHT, SCREEN_WIDTH
 
 from glob import glob
 from osu.preview import beatmap as beatmap_preview
 
-pygame.init()
-
-BEATMAPS_FOLDER = 'C:\\Program Files (x86)\\Jogos\\osu!\\Songs\\'
-BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Uta*Himei*.osu")[0]
-#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Burnt Rice*ScubDomino*Lemon*.osu")[0]
-#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Quantum Entanglement*.osu")[0]
-#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Imprinting*9.5*.osu")[0]
-#BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*DAYBREAK*Horizon[]]*.osu")[0]
+BEATMAPS_FOLDER = "C:/Users/guigb/AppData/Local/osu!/Songs"
+BEATMAP = glob(BEATMAPS_FOLDER + "\\**\\*Itazura Fiction*Akitoshi*Chaos*.osu")[0]
 beatmap = _beatmap.load(BEATMAP)
 
 AUDIO = os.path.dirname(BEATMAP) + "\\" + beatmap["AudioFilename"]
 
-#REPLAY = glob('C:\\Program Files (x86)\\Jogos\\osu!\\Replays\\BzMasked -*Quantum Entanglement*.osr')[0]
-REPLAY = 'C:\\Program Files (x86)\\Jogos\\osu!\\Replays\\BzMasked - Imperial Circus Dead Decadence - Uta [Himei] (2018-04-29) Osu.osr'
+mp3 = mutagen.mp3.MP3(AUDIO)
+pygame.mixer.init(frequency=mp3.info.sample_rate)
+pygame.mixer.music.load(AUDIO)
+pygame.mixer.music.play(start=beatmap['AudioLeadIn'] / 1000)
+
 REPLAY_DATA = 'osu\\replay.npy'
 REPLAY_SAMPLING_RATE = 32
 
-my_replay = _replay.load(REPLAY)
-
 ia_replay = np.load(REPLAY_DATA)
+
+pygame.init()
 
 time = 0
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
-pygame.mixer.music.load(AUDIO)
-pygame.mixer.music.play()
 
 FRAME_RATE = 1000
 
@@ -69,8 +65,8 @@ while True:
             cx = ox
             cy = oy
 
-    cx, cy, z = my_replay.frame(time)
-    pygame.draw.circle(screen, (255, 0, 0), (int(cx), int(cy)), 8)
+    #cx, cy, z = my_replay.frame(time)
+    #pygame.draw.circle(screen, (255, 0, 0), (int(cx), int(cy)), 8)
 
     frame = (time - beatmap.start_offset()) // REPLAY_SAMPLING_RATE
     if frame > 0 and frame < len(ia_replay):
