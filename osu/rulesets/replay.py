@@ -13,8 +13,22 @@ from ._util.binfile import *
 from functools import reduce
 
 class Mod(IntFlag):
-    DT = 0x40
-    HR = 0x10
+    NONE = 0x00 # NoMods
+    NF = 0x01 # NoFail
+    EZ = 0x02 # Easy
+    TD = 0x04 # TouchDevice
+    HD = 0x08 # Hidden
+    HR = 0x10 # HardRock
+    SD = 0x20 # SuddenDeath
+    DT = 0x40 # DoubleTime
+    RL = 0x80 # Relax
+    HT = 0x100 # HalfTime
+    NC = 0x240 # Nightcore  always used with DT
+    FL = 0x400 # Flashlight
+    AP = 0x800 # Autoplay
+    SO = 0x1000 # SpunOut
+    R2 = 0x2000 # Relax2 - Autopilot
+    PF = 0x4000 # Perfect
 
 class Replay:
     def __init__(self, file):
